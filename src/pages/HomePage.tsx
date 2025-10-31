@@ -322,6 +322,7 @@ const HomePage: React.FC = () => {
                 viewMode === 'grid' ? styles.productsGrid : styles.productsList
               }
               layout
+              data-testid="products-container"
             >
               <AnimatePresence>
                 {filteredAndSortedProducts.map(product => (

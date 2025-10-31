@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { render, mockProduct } from '@/test/utils';
+import { render } from '@/test/utils';
+import { mockProduct } from '@/test/utilsData';
 import ProductCard from './ProductCard';
 
 // Mock functions that we'll use in tests
