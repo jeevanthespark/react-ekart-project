@@ -3,10 +3,28 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import Header from './Header';
+import type { Product } from '@/types';
+
+// Lightweight cart/item types for test purposes (avoid pulling full Cart type)
+interface TestCartItem {
+  id: string;
+  productId: string;
+  product: Pick<Product, 'id' | 'name' | 'price' | 'imageUrl'>;
+  quantity: number;
+  addedAt: Date;
+}
+interface TestCart {
+  items: TestCartItem[];
+  totalItems: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+}
 
 // Mock useCart hook
 const mockAddItem = vi.fn();
-const mockCart = {
+const mockCart: TestCart = {
   items: [],
   totalItems: 0,
   subtotal: 0,

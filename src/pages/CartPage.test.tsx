@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import CartPage from './CartPage';
+import type { Product } from '@/types';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -19,7 +20,23 @@ const mockRemoveItem = vi.fn();
 const mockUpdateItemQuantity = vi.fn();
 const mockClearCart = vi.fn();
 
-const mockCartEmpty = {
+interface TestCartItem {
+  id: string;
+  productId: string;
+  product: Product;
+  quantity: number;
+  addedAt: Date;
+}
+interface TestCart {
+  items: TestCartItem[];
+  totalItems: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+}
+
+const mockCartEmpty: TestCart = {
   items: [],
   totalItems: 0,
   subtotal: 0,
@@ -28,7 +45,7 @@ const mockCartEmpty = {
   total: 0,
 };
 
-const mockCartWithItems = {
+const mockCartWithItems: TestCart = {
   items: [
     {
       id: '1',
@@ -73,14 +90,14 @@ const mockCartWithItems = {
   ],
   totalItems: 3,
   subtotal: 249.97,
-  tax: 20.00,
-  shipping: 10.00,
+  tax: 20.0,
+  shipping: 10.0,
   total: 279.97,
 };
 
-let currentCart = mockCartEmpty;
+let currentCart: TestCart = mockCartEmpty;
 
-vi.mock('../stores/CartStore', () => ({
+vi.mock('@/stores/CartStore', () => ({
   useCart: () => ({
     cart: currentCart,
     removeItem: mockRemoveItem,
@@ -194,14 +211,6 @@ describe('CartPage', () => {
   describe('Cart with items', () => {
     beforeEach(() => {
       setCartWithItems(); // Ensure cart has items for these tests
-    });
-    beforeEach(() => {
-      vi.mocked(vi.importActual('@/stores/CartStore')).useCart = () => ({
-        cart: mockCartWithItems,
-        removeItem: mockRemoveItem,
-        updateItemQuantity: mockUpdateItemQuantity,
-        clearCart: mockClearCart,
-      });
     });
 
     it('should display cart items when cart has products', () => {
