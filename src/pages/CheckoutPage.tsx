@@ -18,9 +18,9 @@ import {
   CheckmarkCircle24Regular,
 } from '@fluentui/react-icons';
 import { motion } from 'framer-motion';
-import { useCart } from '@/stores/CartStore';
-import { formatCurrency, isValidEmail, isValidPostalCode } from '@/utils';
-import { Address } from '@/types';
+import { useCart } from '../stores/CartStore';
+import { formatCurrency, isValidEmail, isValidPostalCode } from '../utils';
+import { Address } from '../types';
 
 const useStyles = makeStyles({
   container: {
@@ -271,8 +271,9 @@ const CheckoutPage: React.FC = () => {
     setIsProcessing(true);
     
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulate payment processing (short-circuit in tests for speed/stability)
+      const delay = process.env.NODE_ENV === 'test' ? 0 : 2000;
+      await new Promise(resolve => setTimeout(resolve, delay));
       
       // Clear cart and show success
       clearCart();
@@ -349,6 +350,33 @@ const CheckoutPage: React.FC = () => {
                 placeholder="Enter your email address"
               />
             </Field>
+            {/* Added missing customer name fields (previously validated but no inputs) */}
+            <div className={styles.formRow}>
+              <Field
+                label="First Name"
+                required
+                validationMessage={formErrors.firstName}
+                validationState={formErrors.firstName ? 'error' : 'none'}
+              >
+                <Input
+                  value={formData.firstName}
+                  onChange={(_, data) => handleInputChange('firstName', data.value)}
+                  placeholder="First name"
+                />
+              </Field>
+              <Field
+                label="Last Name"
+                required
+                validationMessage={formErrors.lastName}
+                validationState={formErrors.lastName ? 'error' : 'none'}
+              >
+                <Input
+                  value={formData.lastName}
+                  onChange={(_, data) => handleInputChange('lastName', data.value)}
+                  placeholder="Last name"
+                />
+              </Field>
+            </div>
           </Card>
 
           {/* Shipping Address */}
@@ -364,6 +392,7 @@ const CheckoutPage: React.FC = () => {
                 <Input
                   value={formData.address.firstName}
                   onChange={(_, data) => handleAddressChange('firstName', data.value)}
+                  placeholder="Shipping first name"
                 />
               </Field>
               <Field
@@ -375,6 +404,7 @@ const CheckoutPage: React.FC = () => {
                 <Input
                   value={formData.address.lastName}
                   onChange={(_, data) => handleAddressChange('lastName', data.value)}
+                  placeholder="Shipping last name"
                 />
               </Field>
             </div>
@@ -406,6 +436,7 @@ const CheckoutPage: React.FC = () => {
                 <Input
                   value={formData.address.city}
                   onChange={(_, data) => handleAddressChange('city', data.value)}
+                  placeholder="City"
                 />
               </Field>
               <Field
@@ -417,6 +448,7 @@ const CheckoutPage: React.FC = () => {
                 <Input
                   value={formData.address.state}
                   onChange={(_, data) => handleAddressChange('state', data.value)}
+                  placeholder="State"
                 />
               </Field>
             </div>
@@ -430,6 +462,7 @@ const CheckoutPage: React.FC = () => {
                 <Input
                   value={formData.address.postalCode}
                   onChange={(_, data) => handleAddressChange('postalCode', data.value)}
+                  placeholder="Postal code"
                 />
               </Field>
               <Field label="Country">

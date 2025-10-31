@@ -108,8 +108,9 @@ describe('ProductCard', () => {
       <ProductCard product={mockProduct} onProductClick={mockOnProductClick} />
     );
     
-    // Find the card element (it has role="group")
-    const card = screen.getByRole('group');
+    // Find the card element by its container
+    const card = screen.getByText('Test Product').closest('div');
+    if (!card) throw new Error('Card container not found');
     fireEvent.click(card);
     
     expect(mockOnProductClick).toHaveBeenCalledWith(mockProduct);

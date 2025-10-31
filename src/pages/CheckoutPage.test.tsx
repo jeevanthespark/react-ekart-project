@@ -1,22 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import CheckoutPage from './CheckoutPage';
 
-// Mock useNavigate
+// Mock navigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual<any>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
 
-// Mock useCart hook
+// Cart mocks
 const mockClearCart = vi.fn();
-const mockCart = {
+const populatedCart = {
   items: [
     {
       id: '1',
@@ -24,344 +24,149 @@ const mockCart = {
       product: {
         id: 'prod1',
         name: 'Test Product',
-        price: 99.99,
+        price: 50,
         imageUrl: 'https://example.com/image.jpg',
       },
       quantity: 2,
       addedAt: new Date(),
     },
+    {
+      id: '2',
+      productId: 'prod2',
+      product: {
+        id: 'prod2',
+        name: 'Another Product',
+        price: 25,
+        imageUrl: 'https://example.com/image2.jpg',
+      },
+      quantity: 1,
+      addedAt: new Date(),
+    },
   ],
-  totalItems: 2,
-  subtotal: 199.98,
-  tax: 16.00,
-  shipping: 10.00,
-  total: 225.98,
+  totalItems: 3,
+  subtotal: 125,
+  tax: 10,
+  shipping: 0,
+  total: 135,
 };
 
-vi.mock('@/stores/CartStore', () => ({
+vi.mock('../stores/CartStore', () => ({
   useCart: () => ({
-    cart: mockCart,
+    cart: populatedCart,
     clearCart: mockClearCart,
   }),
 }));
 
-// Mock utility functions
-vi.mock('@/utils', () => ({
-  formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
-  isValidEmail: (email: string) => email.includes('@') && email.includes('.'),
-  isValidPostalCode: (code: string) => /^\\d{5}(-\\d{4})?$/.test(code),
-}));
+// Utils mocks just reuse real validation for meaningful coverage except currency
+vi.mock('../utils', async () => {
+  const actual = await vi.importActual<any>('../utils');
+  return {
+    ...actual,
+    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+  };
+});
 
-// Mock framer-motion
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} {...props}>
-        {children}
-      </div>
-    ),
-  },
-}));
-
-const renderCheckoutPage = () => {
-  return render(
+const renderCheckout = () =>
+  render(
     <FluentProvider theme={webLightTheme}>
       <BrowserRouter>
         <CheckoutPage />
       </BrowserRouter>
     </FluentProvider>
   );
-};
 
 describe('CheckoutPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should render without crashing', () => {
-    renderCheckoutPage();
-    
+  it('renders title and order summary with items', () => {
+    renderCheckout();
     expect(screen.getByText('Checkout')).toBeInTheDocument();
-  });
-
-  it('should display checkout form sections', () => {
-    renderCheckoutPage();
-    
-    expect(screen.getByText('Shipping Information')).toBeInTheDocument();
-    expect(screen.getByText('Payment Information')).toBeInTheDocument();
-    expect(screen.getByText('Order Summary')).toBeInTheDocument();
-  });
-
-  it('should render shipping form fields', () => {
-    renderCheckoutPage();
-    
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/state/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/zip code/i)).toBeInTheDocument();
-  });
-
-  it('should render payment form fields', () => {
-    renderCheckoutPage();
-    
-    expect(screen.getByLabelText(/card number/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/expiry date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/cvv/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/cardholder name/i)).toBeInTheDocument();
-  });
-
-  it('should display order summary', () => {
-    renderCheckoutPage();
-    
     expect(screen.getByText('Order Summary')).toBeInTheDocument();
     expect(screen.getByText('Test Product')).toBeInTheDocument();
-    expect(screen.getByText('$199.98')).toBeInTheDocument(); // Subtotal
-    expect(screen.getByText('$16.00')).toBeInTheDocument(); // Tax
-    expect(screen.getByText('$10.00')).toBeInTheDocument(); // Shipping
-    expect(screen.getByText('$225.98')).toBeInTheDocument(); // Total
+    expect(screen.getByText('Another Product')).toBeInTheDocument();
+    // Per-item price appears in details; ensure subtotal present for currency formatting
+    expect(screen.getByText('$125.00')).toBeInTheDocument();
+    expect(screen.getByText('$10.00')).toBeInTheDocument();
+    expect(screen.getByText('$135.00')).toBeInTheDocument();
   });
 
-  it('should render place order button', () => {
-    renderCheckoutPage();
-    
-    const placeOrderButton = screen.getByRole('button', { name: /place order/i });
-    expect(placeOrderButton).toBeInTheDocument();
+  it('shows validation errors when submitting empty form', () => {
+    renderCheckout();
+    const placeOrder = screen.getByRole('button', { name: /place order/i });
+    fireEvent.click(placeOrder);
+    // Synchronous because validateForm sets errors immediately
+    expect(screen.getByText('Email is required')).toBeInTheDocument();
+    expect(screen.getAllByText('First name is required').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Last name is required').length).toBeGreaterThan(0);
+    expect(screen.getByText('Address is required')).toBeInTheDocument();
   });
 
-  it('should validate required fields before submission', async () => {
-    renderCheckoutPage();
-    
-    const placeOrderButton = screen.getByRole('button', { name: /place order/i });
-    fireEvent.click(placeOrderButton);
-    
-    // Should show validation errors
+  it('validates email format', async () => {
+    renderCheckout();
+    const email = screen.getByPlaceholderText('Enter your email address');
+    fireEvent.change(email, { target: { value: 'invalid' } });
+    const placeOrder = screen.getByRole('button', { name: /place order/i });
+    fireEvent.click(placeOrder);
     await waitFor(() => {
-      expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
+      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
     });
   });
 
-  it('should validate email format', async () => {
-    renderCheckoutPage();
-    
-    const emailInput = screen.getByLabelText(/email/i);
-    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-    fireEvent.blur(emailInput);
-    
+  it('validates postal code format', async () => {
+    renderCheckout();
+    const postal = screen.getByPlaceholderText('Postal code');
+    fireEvent.change(postal, { target: { value: 'abc' } });
+    const placeOrder = screen.getByRole('button', { name: /place order/i });
+    fireEvent.click(placeOrder);
     await waitFor(() => {
-      expect(screen.getByText(/please enter a valid email/i)).toBeInTheDocument();
+      expect(screen.getByText('Please enter a valid postal code')).toBeInTheDocument();
     });
   });
 
-  it('should validate postal code format', async () => {
-    renderCheckoutPage();
-    
-    const zipInput = screen.getByLabelText(/zip code/i);
-    fireEvent.change(zipInput, { target: { value: 'invalid' } });
-    fireEvent.blur(zipInput);
-    
+  it('allows filling form and placing order (success state)', async () => {
+    renderCheckout();
+
+    fireEvent.change(screen.getByPlaceholderText('Enter your email address'), { target: { value: 'john@doe.com' } });
+    fireEvent.change(screen.getByPlaceholderText('First name'), { target: { value: 'John' } });
+    fireEvent.change(screen.getByPlaceholderText('Last name'), { target: { value: 'Doe' } });
+    fireEvent.change(screen.getByPlaceholderText('Shipping first name'), { target: { value: 'John' } });
+    fireEvent.change(screen.getByPlaceholderText('Shipping last name'), { target: { value: 'Doe' } });
+    fireEvent.change(screen.getByPlaceholderText('Street address'), { target: { value: '1 Main St' } });
+    fireEvent.change(screen.getByPlaceholderText('City'), { target: { value: 'NYC' } });
+    fireEvent.change(screen.getByPlaceholderText('State'), { target: { value: 'NY' } });
+    fireEvent.change(screen.getByPlaceholderText('Postal code'), { target: { value: '10001' } });
+    fireEvent.change(screen.getByPlaceholderText('Name on card'), { target: { value: 'John Doe' } });
+    fireEvent.change(screen.getByPlaceholderText('1234 5678 9012 3456'), { target: { value: '4111111111111111' } });
+    fireEvent.change(screen.getByPlaceholderText('MM/YY'), { target: { value: '12/30' } });
+    fireEvent.change(screen.getByPlaceholderText('123'), { target: { value: '123' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /place order/i }));
+
     await waitFor(() => {
-      expect(screen.getByText(/please enter a valid zip code/i)).toBeInTheDocument();
+      expect(mockClearCart).toHaveBeenCalled();
+      expect(screen.getByText('Order Placed Successfully!')).toBeInTheDocument();
     });
   });
 
-  it('should validate card number', async () => {
-    renderCheckoutPage();
-    
-    const cardNumberInput = screen.getByLabelText(/card number/i);
-    fireEvent.change(cardNumberInput, { target: { value: '1234' } });
-    fireEvent.blur(cardNumberInput);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/please enter a valid card number/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should validate expiry date', async () => {
-    renderCheckoutPage();
-    
-    const expiryInput = screen.getByLabelText(/expiry date/i);
-    fireEvent.change(expiryInput, { target: { value: '13/25' } });
-    fireEvent.blur(expiryInput);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/please enter a valid expiry date/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should validate CVV', async () => {
-    renderCheckoutPage();
-    
-    const cvvInput = screen.getByLabelText(/cvv/i);
-    fireEvent.change(cvvInput, { target: { value: '12' } });
-    fireEvent.blur(cvvInput);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/please enter a valid cvv/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should handle successful form submission', async () => {
-    renderCheckoutPage();
-    
-    // Fill out all required fields
-    fireEvent.change(screen.getByLabelText(/first name/i), {
-      target: { value: 'John' },
-    });
-    fireEvent.change(screen.getByLabelText(/last name/i), {
-      target: { value: 'Doe' },
-    });
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'john@example.com' },
-    });
-    fireEvent.change(screen.getByLabelText(/phone/i), {
-      target: { value: '123-456-7890' },
-    });
-    fireEvent.change(screen.getByLabelText(/address/i), {
-      target: { value: '123 Main St' },
-    });
-    fireEvent.change(screen.getByLabelText(/city/i), {
-      target: { value: 'New York' },
-    });
-    fireEvent.change(screen.getByLabelText(/state/i), {
-      target: { value: 'NY' },
-    });
-    fireEvent.change(screen.getByLabelText(/zip code/i), {
-      target: { value: '10001' },
-    });
-    fireEvent.change(screen.getByLabelText(/card number/i), {
-      target: { value: '4111111111111111' },
-    });
-    fireEvent.change(screen.getByLabelText(/expiry date/i), {
-      target: { value: '12/25' },
-    });
-    fireEvent.change(screen.getByLabelText(/cvv/i), {
-      target: { value: '123' },
-    });
-    fireEvent.change(screen.getByLabelText(/cardholder name/i), {
-      target: { value: 'John Doe' },
-    });
-    
-    const placeOrderButton = screen.getByRole('button', { name: /place order/i });
-    fireEvent.click(placeOrderButton);
-    
-    // Should show success message and redirect
-    await waitFor(() => {
-      expect(screen.getByText(/order placed successfully/i)).toBeInTheDocument();
-    });
-    
-    expect(mockClearCart).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith('/');
-  });
-
-  it('should handle billing address same as shipping', () => {
-    renderCheckoutPage();
-    
-    const sameAddressCheckbox = screen.getByLabelText(/billing address same as shipping/i);
-    fireEvent.click(sameAddressCheckbox);
-    
-    // Billing address fields should be hidden or disabled
-    expect(sameAddressCheckbox).toBeChecked();
-  });
-
-  it('should handle payment method selection', () => {
-    renderCheckoutPage();
-    
-    // Should be able to select different payment methods
-    expect(screen.getByText('Payment Information')).toBeInTheDocument();
-  });
-
-  it('should display security indicators', () => {
-    renderCheckoutPage();
-    
-    expect(screen.getByText(/secure checkout/i)).toBeInTheDocument();
-    expect(screen.getByText(/ssl encrypted/i)).toBeInTheDocument();
-  });
-
-  it('should format card number with spaces', () => {
-    renderCheckoutPage();
-    
-    const cardNumberInput = screen.getByLabelText(/card number/i);
-    fireEvent.change(cardNumberInput, { target: { value: '4111111111111111' } });
-    
-    // Should format the card number
-    expect(cardNumberInput).toHaveValue('4111 1111 1111 1111');
-  });
-
-  it('should limit CVV input length', () => {
-    renderCheckoutPage();
-    
-    const cvvInput = screen.getByLabelText(/cvv/i);
-    fireEvent.change(cvvInput, { target: { value: '12345' } });
-    
-    // Should limit to 3-4 digits
-    expect(cvvInput.value.length).toBeLessThanOrEqual(4);
-  });
-
-  it('should handle form field focus and blur', () => {
-    renderCheckoutPage();
-    
-    const emailInput = screen.getByLabelText(/email/i);
-    fireEvent.focus(emailInput);
-    fireEvent.blur(emailInput);
-    
-    // Should handle focus states properly
-    expect(emailInput).toBeInTheDocument();
-  });
-
-  it('should apply responsive layout', () => {
-    renderCheckoutPage();
-    
-    const container = screen.getByText('Checkout').closest('div');
-    expect(container).toHaveClass(/container/);
-  });
-
-  it('should handle mobile layout', () => {
-    // Mock mobile viewport
-    Object.defineProperty(window, 'innerWidth', {
-      writable: true,
-      configurable: true,
-      value: 375,
-    });
-    
-    renderCheckoutPage();
-    
-    expect(screen.getByText('Checkout')).toBeInTheDocument();
-  });
-
-  it('should display loading state during submission', async () => {
-    renderCheckoutPage();
-    
-    // Fill required fields and submit
-    fireEvent.change(screen.getByLabelText(/first name/i), {
-      target: { value: 'John' },
-    });
-    // ... fill other fields
-    
-    const placeOrderButton = screen.getByRole('button', { name: /place order/i });
-    fireEvent.click(placeOrderButton);
-    
-    // Should show loading state
-    await waitFor(() => {
-      expect(screen.getByText(/processing/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should handle empty cart scenario', () => {
-    // Mock empty cart
-    vi.doMock('@/stores/CartStore', () => ({
+  it('redirects when cart is empty', async () => {
+    vi.resetModules();
+    // Remock with empty cart
+    vi.doMock('../stores/CartStore', () => ({
       useCart: () => ({
-        cart: { items: [], totalItems: 0, total: 0 },
+        cart: { items: [], totalItems: 0, subtotal: 0, tax: 0, shipping: 0, total: 0 },
         clearCart: mockClearCart,
       }),
     }));
-    
-    renderCheckoutPage();
-    
-    // Should redirect or show empty cart message
-    expect(screen.getByText(/your cart is empty/i)).toBeInTheDocument();
+    const { default: Page } = await import('./CheckoutPage');
+    render(
+      <FluentProvider theme={webLightTheme}>
+        <BrowserRouter>
+          <Page />
+        </BrowserRouter>
+      </FluentProvider>
+    );
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });

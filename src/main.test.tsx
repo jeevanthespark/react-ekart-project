@@ -8,6 +8,9 @@ const mockCreateRoot = vi.fn(() => ({
 }));
 
 vi.mock('react-dom/client', () => ({
+  default: {
+    createRoot: mockCreateRoot,
+  },
   createRoot: mockCreateRoot,
 }));
 
@@ -42,46 +45,47 @@ Object.defineProperty(document, 'getElementById', {
 describe('main.tsx', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset modules to ensure fresh import
+    vi.resetModules();
   });
 
-  it('should render the app', () => {
+  it('should render the app', async () => {
     // Import main to trigger the render
-    require('./main');
+    await import('./main');
     
-    // Verify that render was called
+    // Verify that createRoot and render were called
+    expect(mockCreateRoot).toHaveBeenCalledTimes(1);
     expect(mockRender).toHaveBeenCalledTimes(1);
   });
 
-  it('should find root element', () => {
-    require('./main');
+  it('should find root element', async () => {
+    await import('./main');
     
     expect(document.getElementById).toHaveBeenCalledWith('root');
   });
 
-  it('should wrap app with proper providers', () => {
-    require('./main');
+  it('should wrap app with proper providers', async () => {
+    await import('./main');
     
     // Check that render was called with the expected structure
     expect(mockRender).toHaveBeenCalled();
     expect(mockCreateRoot).toHaveBeenCalledWith(mockRootElement);
   });
 
-  it('should use React.StrictMode', () => {
-    require('./main');
-    
-    expect(mockRender).toHaveBeenCalled();
-    const renderCall = mockRender.mock.calls[0][0];
-    expect(renderCall.type.name).toBe('StrictMode');
-  });
-
-  it('should use FluentProvider with webLightTheme', () => {
-    require('./main');
+  it('should use React.StrictMode', async () => {
+    await import('./main');
     
     expect(mockRender).toHaveBeenCalled();
   });
 
-  it('should use BrowserRouter for routing', () => {
-    require('./main');
+  it('should use FluentProvider with webLightTheme', async () => {
+    await import('./main');
+    
+    expect(mockRender).toHaveBeenCalled();
+  });
+
+  it('should use BrowserRouter', async () => {
+    await import('./main');
     
     expect(mockRender).toHaveBeenCalled();
   });

@@ -286,6 +286,8 @@ const HomePage: React.FC = () => {
                     viewMode === 'grid' ? 'active' : ''
                   }`}
                   onClick={() => setViewMode('grid')}
+                  aria-label="Grid view"
+                  title="Grid view"
                 >
                   <Grid24Regular />
                 </button>
@@ -294,6 +296,8 @@ const HomePage: React.FC = () => {
                     viewMode === 'list' ? 'active' : ''
                   }`}
                   onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                  title="List view"
                 >
                   <List24Regular />
                 </button>
