@@ -59,6 +59,9 @@ These instructions tailor GitHub Copilot / ChatGPT style assistants to this repo
 - Provide fallback or progressive enhancement strategies rather than monolithic rewrites.
 - Surface edge cases: empty cart, search with no results, mobile viewport (< 600px).
 
+### Related Instruction Files
+- See `./instructions/react.instructions.md` for detailed React + Fluent UI implementation guidance.
+
 ## Adding Features
 1. Define a small contract (inputs/outputs, side effects).
 2. Write 1–2 tests first (happy + edge case).
