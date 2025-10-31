@@ -4,9 +4,13 @@ import { BrowserRouter } from 'react-router-dom';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import HomePage from './HomePage';
 
-// Mock ProductCard component
+// Mock ProductCard component with typed props
+interface MockProductCardProps {
+  product: { id: string; name: string; price: number } & Record<string, unknown>;
+  onProductClick?: (product: MockProductCardProps['product']) => void;
+}
 vi.mock('@/components/Product/ProductCard', () => ({
-  default: ({ product, onProductClick }: any) => (
+  default: ({ product, onProductClick }: MockProductCardProps) => (
     <div data-testid="product-card" onClick={() => onProductClick?.(product)}>
       <h3>{product.name}</h3>
       <p>{product.price}</p>
@@ -14,9 +18,13 @@ vi.mock('@/components/Product/ProductCard', () => ({
   ),
 }));
 
-// Mock ProductFilters component
+// Mock ProductFilters component with typed props
+interface MockProductFiltersProps {
+  onFiltersChange: (filters: Record<string, unknown>) => void;
+  onSortChange: (sort: string) => void;
+}
 vi.mock('@/components/Product/ProductFilters', () => ({
-  default: ({ onFiltersChange, onSortChange }: any) => (
+  default: ({ onFiltersChange, onSortChange }: MockProductFiltersProps) => (
     <div data-testid="product-filters">
       <button onClick={() => onFiltersChange({ category: ['electronics'] })}>
         Filter Electronics
@@ -54,16 +62,21 @@ vi.mock('@/data/mockData', () => ({
   ],
 }));
 
-// Mock framer-motion
+// Mock framer-motion with typed props
+interface MotionDivProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} {...props}>
+    div: ({ children, className, ...props }: MotionDivProps) => (
+      <div className={className} {...(props as Record<string, unknown>)}>
         {children}
       </div>
     ),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 const renderHomePage = () => {

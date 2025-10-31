@@ -48,38 +48,60 @@ Object.defineProperty(window, 'scrollTo', {
 });
 
 // Mock Fluent UI Components globally
+// Typed mock implementations for Fluent UI components
+interface CommonProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
+interface InputProps extends CommonProps {
+  value?: string;
+  onChange?: (ev: unknown, data: { value: string }) => void;
+}
+interface DropdownProps extends CommonProps {
+  value?: string;
+  onOptionSelect?: (ev: unknown, data: { optionValue: string }) => void;
+  placeholder?: string;
+}
+interface OptionProps extends CommonProps {
+  value?: string;
+}
+interface FieldProps extends CommonProps {
+  label?: string;
+  validationMessage?: string;
+}
 vi.mock('@fluentui/react-components', async () => {
-  const actual = await vi.importActual('@fluentui/react-components');
+  const actual = await vi.importActual<typeof import('@fluentui/react-components')>('@fluentui/react-components');
   return {
     ...actual,
-    Text: ({ children, className, ...props }: any) => React.createElement('span', { className, ...props }, children),
-    Button: ({ children, className, onClick, disabled, ...props }: any) => 
-      React.createElement('button', { className, onClick, disabled, ...props }, children),
-    Card: ({ children, className, ...props }: any) => React.createElement('div', { className, ...props }, children),
-    Input: ({ className, value, onChange, ...props }: any) => 
+    Text: ({ children, className, ...props }: CommonProps) => React.createElement('span', { className, ...(props as Record<string, unknown>) }, children),
+    Button: ({ children, className, onClick, disabled, ...props }: CommonProps & { onClick?: () => void; disabled?: boolean }) => 
+      React.createElement('button', { className, onClick, disabled, ...(props as Record<string, unknown>) }, children),
+    Card: ({ children, className, ...props }: CommonProps) => React.createElement('div', { className, ...(props as Record<string, unknown>) }, children),
+    Input: ({ className, value, onChange, ...props }: InputProps) => 
       React.createElement('input', { 
-        className, 
-        value, 
-        onChange: (e: any) => onChange?.(e, { value: e.target.value }), 
-        ...props 
+        className,
+        value,
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange?.(e, { value: e.target.value }),
+        ...(props as Record<string, unknown>)
       }),
-    Field: ({ children, label, validationMessage, ...props }: any) => 
-      React.createElement('div', { ...props },
+    Field: ({ children, label, validationMessage, ...props }: FieldProps) => 
+      React.createElement('div', { ...(props as Record<string, unknown>) },
         label && React.createElement('label', {}, label),
         children,
         validationMessage && React.createElement('span', { className: 'error-message' }, validationMessage)
       ),
-    Dropdown: ({ children, value, onOptionSelect, placeholder, ...props }: any) => 
+    Dropdown: ({ children, value, onOptionSelect, placeholder, ...props }: DropdownProps) => 
       React.createElement('select', { 
-        value, 
-        onChange: (e: any) => onOptionSelect?.(e, { optionValue: e.target.value }), 
-        ...props 
+        value,
+        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onOptionSelect?.(e, { optionValue: e.target.value }),
+        ...(props as Record<string, unknown>)
       },
         React.createElement('option', { value: '' }, placeholder),
         children
       ),
-    Option: ({ children, value, ...props }: any) => React.createElement('option', { value, ...props }, children),
-    Divider: ({ className, ...props }: any) => React.createElement('hr', { className, ...props }),
+    Option: ({ children, value, ...props }: OptionProps) => React.createElement('option', { value, ...(props as Record<string, unknown>) }, children),
+    Divider: ({ className, ...props }: CommonProps) => React.createElement('hr', { className, ...(props as Record<string, unknown>) }),
     makeStyles: () => () => ({}),
     tokens: {},
   };
@@ -108,11 +130,15 @@ vi.mock('@fluentui/react-icons', () => ({
   Person24Regular: () => React.createElement('span', { 'data-testid': 'person-icon' }, 'Person'),
 }));
 
-// Mock Framer Motion globally
+// Mock Framer Motion globally with typed props
+interface MotionElementProps {
+  children?: React.ReactNode;
+  [key: string]: unknown;
+}
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => React.createElement('div', { ...props }, children),
-    form: ({ children, ...props }: any) => React.createElement('form', { ...props }, children),
+    div: ({ children, ...props }: MotionElementProps) => React.createElement('div', { ...(props as Record<string, unknown>) }, children),
+    form: ({ children, ...props }: MotionElementProps) => React.createElement('form', { ...(props as Record<string, unknown>) }, children),
   },
 }));
 

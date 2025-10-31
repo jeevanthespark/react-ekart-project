@@ -21,6 +21,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Playwright reports
+playwright-report/
+
+# Test result artifacts
+test-results/
 # Runtime data
 pids
 *.pid

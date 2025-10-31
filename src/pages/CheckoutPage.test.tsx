@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import CheckoutPage from './CheckoutPage';
@@ -7,7 +7,7 @@ import CheckoutPage from './CheckoutPage';
 // Mock navigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<any>('react-router-dom');
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -59,7 +59,7 @@ vi.mock('../stores/CartStore', () => ({
 
 // Utils mocks just reuse real validation for meaningful coverage except currency
 vi.mock('../utils', async () => {
-  const actual = await vi.importActual<any>('../utils');
+  const actual = await vi.importActual<typeof import('../utils')>('../utils');
   return {
     ...actual,
     formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,

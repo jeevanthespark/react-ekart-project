@@ -4,14 +4,12 @@ import type {
   ProductCategory,
   CartItem,
   Cart,
-  Order,
   Customer,
   Address,
   PaymentMethod,
   OrderStatus,
   ProductFilters,
   SortOption,
-  ProductSearchParams,
   Toast,
   LoadingState,
   ApiResponse,
@@ -95,7 +93,7 @@ describe('Types', () => {
   });
 
   describe('Order Types', () => {
-    it('should define OrderStatus type correctly', () => {
+    it('should define OrderStatus union type correctly', () => {
       const statuses: OrderStatus[] = [
         'pending',
         'confirmed',
@@ -154,7 +152,7 @@ describe('Types', () => {
   });
 
   describe('Filter and Sort Types', () => {
-    it('should define ProductFilters interface correctly', () => {
+    it('should define ProductFilters shape correctly', () => {
       const filters: ProductFilters = {
         category: ['electronics'],
         priceRange: { min: 0, max: 1000 },

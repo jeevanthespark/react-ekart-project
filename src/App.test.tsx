@@ -32,11 +32,12 @@ vi.mock('./stores/CartStore', () => ({
 }));
 
 // Mock framer-motion
+interface MotionDivProps extends React.HTMLAttributes<HTMLDivElement> { children?: React.ReactNode }
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: MotionDivProps) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 const renderApp = (initialRoute = '/') => {

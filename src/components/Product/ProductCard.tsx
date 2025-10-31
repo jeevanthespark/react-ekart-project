@@ -190,6 +190,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
       whileHover={{ y: -4 }}
+      data-testid="product-card"
     >
       <Card
         className={`${styles.card} ${!product.inStock ? styles.outOfStock : ''}`}
@@ -241,6 +242,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               className={styles.addToCartButton}
               disabled={!product.inStock}
               onClick={handleAddToCart}
+              data-testid="add-to-cart-button"
             >
               {isItemInCart(product.id)
                 ? 'Added to Cart'

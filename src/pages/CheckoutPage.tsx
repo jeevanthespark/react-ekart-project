@@ -334,6 +334,7 @@ const CheckoutPage: React.FC = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
+          data-testid="checkout-form"
         >
           {/* Contact Information */}
           <Card className={styles.section}>
@@ -622,6 +623,7 @@ const CheckoutPage: React.FC = () => {
               className={styles.placeOrderButton}
               disabled={isProcessing}
               onClick={handleSubmit}
+              data-testid="place-order-button"
             >
               {isProcessing ? 'Processing...' : `Place Order - ${formatCurrency(cart.total)}`}
             </Button>

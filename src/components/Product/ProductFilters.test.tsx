@@ -9,11 +9,16 @@ vi.mock('@/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
 }));
 
-// Mock framer-motion
+// Mock framer-motion with typed props
+interface MotionDivProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} {...props}>
+    div: ({ children, className, ...props }: MotionDivProps) => (
+      <div className={className} {...(props as Record<string, unknown>)}>
         {children}
       </div>
     ),
@@ -225,15 +230,7 @@ describe('ProductFilters', () => {
   it('should render mobile close button when onClose prop is provided', () => {
     const mockOnClose = vi.fn();
     renderProductFilters({ onClose: mockOnClose });
-    
-    // Look for any button with dismiss icon or close functionality
     const dismissButtons = screen.getAllByRole('button');
-    const closeButton = dismissButtons.find(button => 
-      button.getAttribute('aria-label')?.includes('dismiss') || 
-      button.textContent?.includes('×') ||
-      button.querySelector('[data-testid="dismiss-icon"]')
-    );
-    // Mock button doesn't render dismiss icon properly, just check buttons exist
     expect(dismissButtons.length).toBeGreaterThan(0);
   });
 

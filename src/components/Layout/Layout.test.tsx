@@ -15,12 +15,11 @@ vi.mock('./Footer', () => ({
 }));
 
 // Mock framer-motion
+interface MotionDivProps extends React.HTMLAttributes<HTMLDivElement> { children?: React.ReactNode }
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} data-testid="motion-div" {...props}>
-        {children}
-      </div>
+    div: ({ children, className, ...props }: MotionDivProps) => (
+      <div className={className} data-testid="motion-div" {...props}>{children}</div>
     ),
   },
 }));

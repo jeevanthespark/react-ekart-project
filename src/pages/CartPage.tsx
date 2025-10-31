@@ -191,7 +191,7 @@ const CartPage = () => {
         >
           Continue Shopping
         </Button>
-        <Text className={styles.title}>Shopping Cart ({cart.totalItems} items)</Text>
+        <Text className={styles.title} data-testid="cart-page-title">Shopping Cart ({cart.totalItems} items)</Text>
       </motion.div>
 
       {/* Content */}
@@ -208,7 +208,7 @@ const CartPage = () => {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className={styles.cartItem}>
+                <Card className={styles.cartItem} data-testid="cart-item">
                   <img
                     src={item.product.imageUrl}
                     alt={item.product.name}
@@ -238,6 +238,7 @@ const CartPage = () => {
                             handleQuantityChange(item.productId, data.value);
                           }
                         }}
+                        data-testid="quantity-input"
                       />
                     </div>
                     
@@ -246,10 +247,11 @@ const CartPage = () => {
                       icon={<Delete24Regular />}
                       onClick={() => handleRemoveItem(item.productId)}
                       aria-label="Remove item"
+                      data-testid="remove-item"
                     />
                   </div>
 
-                  <Text className={styles.itemTotal}>
+                  <Text className={styles.itemTotal} data-testid="item-total">
                     {formatCurrency(item.product.price * item.quantity)}
                   </Text>
                 </Card>
@@ -282,7 +284,7 @@ const CartPage = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className={styles.summaryCard}>
+          <Card className={styles.summaryCard} data-testid="cart-summary">
             <Text className={styles.summaryTitle}>Order Summary</Text>
             
             <div className={styles.summaryRow}>
@@ -307,7 +309,7 @@ const CartPage = () => {
             
             <Divider style={{ margin: '16px 0' }} />
             
-            <div className={styles.summaryRow}>
+            <div className={styles.summaryRow} data-testid="cart-total">
               <Text className={styles.summaryTotal}>Total</Text>
               <Text className={styles.summaryTotal}>{formatCurrency(cart.total)}</Text>
             </div>
@@ -317,6 +319,7 @@ const CartPage = () => {
               appearance="primary"
               size="large"
               className={styles.checkoutButton}
+              data-testid="proceed-to-checkout"
             >
               Proceed to Checkout
             </Button>

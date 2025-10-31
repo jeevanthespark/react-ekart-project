@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import Header from './Header';
@@ -27,16 +27,24 @@ vi.mock('@/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
 }));
 
-// Mock framer-motion
+// Mock framer-motion with typed props
+interface MotionElementProps {
+  children?: React.ReactNode;
+  className?: string;
+  // Allow any other HTML attributes but typed as unknown -> cast to intrinsic elements
+  // This keeps flexibility without using 'any'
+  [key: string]: unknown;
+}
+
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} {...props}>
+    div: ({ children, className, ...props }: MotionElementProps) => (
+      <div className={className} {...(props as Record<string, unknown>)}>
         {children}
       </div>
     ),
-    header: ({ children, className, ...props }: any) => (
-      <header className={className} {...props}>
+    header: ({ children, className, ...props }: MotionElementProps) => (
+      <header className={className} {...(props as Record<string, unknown>)}>
         {children}
       </header>
     ),

@@ -94,19 +94,28 @@ vi.mock('@/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
 }));
 
-// Mock framer-motion
+// Mock framer-motion with typed props
+interface MotionCommonProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
+interface MotionImgProps extends MotionCommonProps {
+  src?: string;
+  alt?: string;
+}
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
-      <div className={className} {...props}>
+    div: ({ children, className, ...props }: MotionCommonProps) => (
+      <div className={className} {...(props as Record<string, unknown>)}>
         {children}
       </div>
     ),
-    img: ({ src, alt, className, ...props }: any) => (
-      <img src={src} alt={alt} className={className} {...props} />
+    img: ({ src, alt, className, ...props }: MotionImgProps) => (
+      <img src={src} alt={alt} className={className} {...(props as Record<string, unknown>)} />
     ),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 const renderCartPage = () => {

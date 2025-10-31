@@ -5,12 +5,11 @@ import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import Footer from './Footer';
 
 // Mock framer-motion
+interface MotionFooterProps extends React.HTMLAttributes<HTMLElement> { children?: React.ReactNode }
 vi.mock('framer-motion', () => ({
   motion: {
-    footer: ({ children, className, ...props }: any) => (
-      <footer className={className} {...props}>
-        {children}
-      </footer>
+    footer: ({ children, className, ...props }: MotionFooterProps) => (
+      <footer className={className} {...props}>{children}</footer>
     ),
   },
 }));
