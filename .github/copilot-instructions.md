@@ -1,6 +1,45 @@
+---
+description: 'Top-level Copilot guidance for repository behavior and collaboration model'
+scope: 'all interactions'
+---
+
 # Copilot Instructions for react-ekart-project
 
-These instructions tailor GitHub Copilot / ChatGPT style assistants to this repository. Focus: a React + TypeScript + Vite e-commerce front-end using Fluent UI, Zustand, Vitest, Playwright, Husky hooks, and a custom coverage gate.
+These instructions tailor GitHub Copilot / Chat assistants to this repository. Focus: a React + TypeScript + Vite e-commerce front-end using Fluent UI, Zustand, Vitest, Playwright, Husky hooks, and a custom coverage gate.
+
+## Quick Start (TL;DR)
+1. Clarify user intent → restate concise contract (inputs / outputs / side-effects / errors).
+2. Add or adjust tests first (happy + 1 edge case) before logic changes.
+3. Produce minimal diff (no unrelated refactors); note follow-ups instead.
+4. Validate lint, type-check, tests, coverage (≥90% changed lines) before concluding.
+5. Summarize changes + next micro-improvements (perf/a11y/refactor) at finish.
+
+## Instruction File Map
+| File | Purpose |
+|------|---------|
+| `.github/copilot-instructions.md` | Global repo norms & collaboration expectations |
+| `.github/chat-modes/senior-react-fluentui.chatmode.md` | Persona & behavioral contract for responses |
+| `.github/instructions/react.instructions.md` | Deep React + Fluent UI implementation standards |
+
+## Anti-Patterns (Avoid)
+- Disabling lint or coverage gates to “get it passing”.
+- Large speculative rewrites without incremental rationale.
+- Introducing `any` without tight justification + TODO follow-up.
+- Using internal Fluent UI class names in assertions.
+- Silent assumption changes (must state assumptions explicitly if proceeding).
+- Over-mocking that hides real behavior (prefer observable effects).
+
+## Failure Recovery Playbook
+| Failure | Action |
+|---------|--------|
+| Coverage <90% | Add focused test for uncovered branch/early return; rerun. |
+| Type error | Refine types / generics; avoid `any` band-aid. |
+| Lint error | Fix root cause; never disable rule. |
+| Flaky test | Isolate, reproduce locally, document suspected cause + stabilization plan. |
+| Ambiguity | Declare ≤2 assumptions, proceed, mark clearly in response. |
+| Performance regression | Profile → apply smallest memo/split; measure again. |
+
+If still blocked: provide minimal repro snippet + 2–3 resolution options.
 
 ## Core Tech Stack
 - React 18, TypeScript, Vite
@@ -58,9 +97,6 @@ These instructions tailor GitHub Copilot / ChatGPT style assistants to this repo
 - Do not suggest disabling coverage/lint rules unless absolutely required.
 - Provide fallback or progressive enhancement strategies rather than monolithic rewrites.
 - Surface edge cases: empty cart, search with no results, mobile viewport (< 600px).
-
-### Related Instruction Files
-- See `./instructions/react.instructions.md` for detailed React + Fluent UI implementation guidance.
 
 ## Adding Features
 1. Define a small contract (inputs/outputs, side effects).

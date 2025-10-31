@@ -1,4 +1,9 @@
-# Custom Instructions: React & Fluent UI
+---
+description: 'React development standards and best practices'
+applyTo: '**/*.jsx, **/*.tsx, **/*.js, **/*.ts, **/*.css, **/*.scss'
+---
+
+# React & Fluent UI Development Instructions
 
 > Purpose: Guide GitHub Copilot / Chat assistants to produce consistent, high-quality React + Fluent UI code, tests, and documentation for this repository.
 
@@ -43,6 +48,21 @@ Copilot should:
 - Memoize expensive derived lists (`useMemo`) when input arrays stable.
 - Batch related state updates if multiple changes triggered.
 - Avoid unnecessary re-renders (stable dependency arrays, minimal inline object literals).
+
+### Extended Performance Principles (Migrated)
+- Prefer lazy loading for future large route bundles.
+- Memoize derived product/filter collections reused in multiple components.
+- Only introduce `useCallback` when it measurably prevents child re-renders.
+- Defer non-critical computations (analytics, logging) to passive effects.
+- Plan list virtualization once product list size becomes a UX bottleneck.
+
+### Iteration Loop Template
+1. Snapshot objective (single sentence).
+2. Micro-plan (3–6 atomic steps: tests → types → impl → verify → optimize).
+3. Apply focused diff (minimal unrelated churn).
+4. Quick verify (targeted tests; full suite if coverage-sensitive change).
+5. Assess impact (coverage %, perf & a11y notes).
+6. Repeat until feature complete; consolidate & document.
 
 ## Coverage Strategy
 - Each changed file should remain ≥90% line coverage; if below, recommend targeted tests.
@@ -133,3 +153,63 @@ Before finishing a response involving code changes:
 
 ---
 These custom instructions align Copilot with project standards for consistent, maintainable React + Fluent UI development.
+
+## KPIs (Reference)
+- Bundle delta per feature: <5% increase (optional analyze on large additions).
+- New utility coverage: ≥95%; component/page coverage: ≥90% lines.
+- Test runtime incremental increase: <3% per feature.
+- Zero new accessibility violations (when axe or e2e checks run).
+
+## Risk Matrix
+| Risk | Indicator | Action |
+|------|-----------|--------|
+| Coverage Drop | Changed file <90% | Add focused test immediately |
+| Type Erosion | Appearance of `any` | Replace with explicit type/union |
+| Perf Regression | Noticeable render lag | Profile → memoize/split component |
+| A11y Gap | Missing aria-label / role | Patch immediately |
+| Scope Drift | Large unrelated diff | Split into separate commit/PR |
+
+## Communication & Progress Note Style
+Use concise, stateful updates: `Step 2/4: Added failing tests for out-of-stock filter (coverage 0→42%); next implement filter util.` Provide next action every note.
+
+## Quick Contract Abbreviation
+`Inputs: ... | Outputs: ... | Side Effects: ... | Errors: ... | Perf: O(...)`
+
+## Fluent UI Design Reference
+Design system guidelines: https://fluent2.microsoft.design (tokens, motion, layout, accessibility). Use alongside API docs: https://react.fluentui.dev.
+
+## Performance Triage Checklist
+1. Confirm symptom (Profiler: excessive renders / long commit time).
+2. Identify hot component or expensive derived computation.
+3. Apply smallest viable remedy (memoize derived data, selector refinement, component split).
+4. Re-measure; revert if negligible improvement.
+5. Document unusual optimizations with inline comment.
+
+## Ambiguity & Assumption Handling
+When requirements are unclear:
+- State up to two explicit assumptions (Assumption A:, Assumption B:).
+- Proceed implementing aligned to those assumptions.
+- Flag assumptions at top of response; invite confirmation.
+If assumptions prove wrong, supply a concise delta patch rather than rewrite.
+
+## Full Example: Feature Implementation Response
+Contract: Adds price range filtering to product listing.
+Tests Added:
+- filters products within inclusive min/max range.
+- returns empty array when min > all prices.
+Diff (excerpt): Only new util `applyPriceRange` and integration in `HomePage`.
+Verification: lint PASS, tests PASS (2 new), coverage new util 100% lines.
+Follow-ups: Consider combining with existing filter pipeline in future refactor.
+
+## Full Example: Bug Fix Response
+Reproduction: Adding out-of-stock item increments cart badge.
+Root Cause: Missing inStock guard in `addItem` path.
+Fix: Early return when `!product.inStock` before state mutation.
+Tests: Added test `does not add out-of-stock product`; existing add test unchanged.
+Risk: Low—guard narrow; no API surface change.
+
+## Full Example: Optimization Response
+Baseline: Product list re-renders 15x per filter toggle (Profiler capture).
+Cause: Inline object literal dependencies causing child re-renders.
+Change: Extract stable `filterCriteria` via `useMemo` + memoize expensive derived list.
+Measurement Plan: Expect renders ≤3 per toggle; verify in Profiler after patch.
